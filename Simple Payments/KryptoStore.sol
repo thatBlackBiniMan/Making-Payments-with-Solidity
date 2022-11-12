@@ -21,19 +21,22 @@ contract KryptoStore{
     uint timestamp;
    }
 
-  event Sale {
+  event Sale (
     uint id,
     address buyer,
     address seller,
     uint cost,
     uint timestamp
-  }
+  
+  );
+  
 
- event Created {
+ event Created (
     uint id,
     address indexed seller,
     uint timestamp
-  }
+ );
+    
  
 
 constructor(uint _tax) {
@@ -63,11 +66,11 @@ function createKrypto(string memory name, string memory description, string memo
     )
    );
 
-   emit Created {
+   emit Created (
     totalSupply++,
     msg.sender,
     block.timestamp
-   }
+   );
   
   return true;
 }
@@ -85,13 +88,13 @@ payTo (taxAccount, fee);
 
 kryptoOf[msg.sender].push(kryptos[id]);
 
-  event Sale {
+  emit Sale (
     id,
     msg.buyer,
     seller,
     kryptos[id].cost,
     block.timestamp
-  }
+  )
 
 }
 
