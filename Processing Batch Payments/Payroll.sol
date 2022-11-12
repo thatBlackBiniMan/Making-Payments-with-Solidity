@@ -84,11 +84,17 @@ function payEmployees() public ownerOnly returns (bool){
 }
 
 
-function name(type name) {
-  
+function fundAccount() public payable returns (bool){
+  require(companyAcc != msg.sender, "Cannot fund self"); 
+  require(msg.value > 0 ether, "Insufficient Funds");
+
+  companyBal += msg.value;
+  return true;
 }
 
-
+function getEmployees() public view returns(EmployeeStruct[] memory){
+  return employees;
+}
 
 function payTo(address to, uint amount) internal returns (bool){
   (bool succeded, ) = payable(to).call{value: amount}("");
