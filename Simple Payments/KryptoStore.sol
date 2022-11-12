@@ -80,12 +80,59 @@ function payForKrypto(uint id)public payable returns(bool){
  uint fee = (msg.value / 100 * tax);
  uint payment = msg.value - fee;
 
-payTo(seller, amount);
+payTo(seller, payment); // maybe change to amount
+payTo (taxAccount, fee);
+
+kryptoOf[msg.sender].push(kryptos[id]);
+
+  event Sale {
+    id,
+    msg.buyer,
+    seller,
+    kryptos[id].cost,
+    block.timestamp
+  }
+
 }
 
 
+// Sending Money
+
+
 function payTo (address to, uint amount) internal returns (bool){
- (bool success,) = payable(to).call{};
+ (bool successful,) = payable(to).call{value: amount}{""};
+ require(seccessful, "Payment Failed");
+ return true;
+}
+
+//       OR         \\
+
+function transferTo (address to, uint amount) internal returns (bool){
+ payable(to).transfer{amount};
+return true;
+}
+
+
+//       OR         \\
+
+function sendTo (address to, uint amount) internal returns (bool){
+require(payable(to).send{amount}, "Payment failed");
+return true;
+}
+
+
+//  Function to see buyer's / seller Kyptos
+
+function myKryptos(address buyer) public view returns(KryptoStruct[] memory){
+  return kryptoOf[buyer];
+}
+
+function getKryptos() public view returns(KryptoStruct[] memory){
+  return kryptos;
+}
+
+function getKrypto(uint id) public view returns(KryptoStruct[] memory){
+  return kryptos[id];
 }
 
 }
