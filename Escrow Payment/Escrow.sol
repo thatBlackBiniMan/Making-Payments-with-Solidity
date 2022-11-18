@@ -50,15 +50,15 @@ contract Escrow is ReentrancyGuard{
     escFee = _escFee;
   }
 
-function createItem(string memory purpose, uint amount) public returns(bool){
+function createItem(string memory purpose) public payable returns(bool){
   require(bytes(purpose).length > 0, "Purpose cannot be blank");
-  require(amount > 0, "Amount Cannot be Zero");
+  require(msg.value > 0 ether, "Amount Cannot be Zero");
   
   uint itemId = totalItems++;
   ItemStruct storage item = items[itemId];
   item.itemId = itemId;
   item.purpose = purpose;
-  item.amount = amount;
+  item.amount = msg.value;
   item.timestamp = block.timestamp;
   item.owner = msg.sender;
   
@@ -116,6 +116,25 @@ function approveRequest(uint itemId, address buyer) public returns(bool){
  require(msg.sender == owner[itemId], "Only owner");
  require(isAvailable[itemId] == Available.YES, "Item  unavailable");
  require(requested[buyer][itemId], "Buyer not on Purchase list");
+
+items[itemId].buyer = buyer;
+items[itemId].status = Status.PENDING;
+isAvailable[itemId] = Available.NO;
+
+
+  emit Action (
+    itemId,
+    "ITEM APPROVED",
+    Status.PENDING,
+    msg.sender
+  );
+ 
+ return true;
+}
+
+
+function performDelevery(uint itemId) public returns (bool){
+  require(msg.sender == items[itemId].buyer, "");
 }
 
  }
