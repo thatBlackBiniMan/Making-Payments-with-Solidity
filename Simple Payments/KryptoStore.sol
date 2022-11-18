@@ -103,7 +103,7 @@ kryptoOf[msg.sender].push(kryptos[id]);
 
 
 function payTo (address to, uint amount) internal returns (bool){
- (bool successful,) = payable(to).call{value: amount}{""};
+ (bool successful,) = payable(to).call{value: amount}("");
  require(seccessful, "Payment Failed");
  return true;
 }

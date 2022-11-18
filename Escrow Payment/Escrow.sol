@@ -65,7 +65,9 @@ function createItem(string memory purpose) public payable returns(bool){
   itemsOf[msg.sender].push(item);
   ownerOf[itemId] = msg.sender;
   isAvailable[itemId] = Available.YES;
+  escBal += msg.value;
 
+ 
   emit Action (
     itemId,
     "ITEM CREATED",
@@ -96,7 +98,7 @@ function getItem(uint itemId) public view returns(ItemStuct memory){
  
 
 function requestItem (uint itemId) public returns(bool) {
-  require (msg.sender != owner[itemId], "Owner cannot Request for own item");
+  require (msg.sender != ownerOf[itemId], "Owner cannot Request for own item");
   require(isAvailable[itemId] == Available.YES, "Item not Available");
   requested[msg.sender][itemId] = true;
 
@@ -134,7 +136,96 @@ isAvailable[itemId] = Available.NO;
 
 
 function performDelevery(uint itemId) public returns (bool){
-  require(msg.sender == items[itemId].buyer, "");
+  require(msg.sender == items[itemId].buyer, "You are not the approved buyer");
+  require(!items[itemId].provided, "You have already delevered this item");
+  require(!items[itemId].confirmed, "You have already confirmed this item");
+
+  items[itemId].provided = true;
+  items[itemId].status = Status.DELIVERY;
+
+  emit Action(
+    itemId, 
+    "ITEM DELIVERY INITIATED",
+    Status.DELIVERY,
+    msg.sender
+    );
+   return true;
+}
+
+
+function confirmDelivery(uint itemId, bool provided) public returns (bool){
+  require(msg.sender == ownerOf[itemId], "Only owner allowed");
+  require (items[itemId].provided, "You haven't delivered this item");
+  require (items[itemId].status !=Status.REFUNDED, "Already refunded, create new item");
+
+  if(provided){
+    uint fee = (items[itemId].amount = escFee) / 100;
+    uint amount = items[itemsId].amount = fee;
+    payTo(items[itemId].buyer, amount);
+    escBal -= items[itemId].amount;
+    escAvailable += fee;
+
+    items[itemId].confirmed = true;
+    items[itemId].status = Status.CONFIRMED;
+    totalConfirmed++; 
+    
+    emit Action (
+      itemId,
+      "ITEM CONFIRMED",
+      Status.CONFIRMED,
+      msg.sender
+    );
+  }
+  else{
+       items[itemId].status = Status.DISPUTED;
+      
+      
+    emit Action (
+      itemId,
+      "ITEM DISPUTED",
+      Status.DISPUTED,
+      msg.sender
+    );
+  }
+
+  return true;
+}
+
+
+function refundItem(uint itemId) public returns(bool){
+  require(msg.sender == escAcc, "Only Escrow Validator allowed");
+  require(!items[itemId],provided, "Already delivered");
+
+  payTo(items[itemId].owner, items[itemId].amount);
+  escBal -= items[itemId].amount;
+  items[itemId].status = Status.REFUNDED;
+  totalDisputed++;
+
+     emit Action (
+      itemId,
+      "ITEM REFUNDED",
+      Status.REFUNDED,
+      msg.sender
+    );
+ return true;
+}
+
+
+function withdrawFund(address to, uint amount) public returns(bool){
+  require(msg.sender == escAcc, "Only Escrow validator can withdraw");
+  require(amount <= escAvailBal, "insufficient funds");
+
+  payTo(to, amount);
+  escAvailBal -= amount;
+
+return true; 
+}
+
+
+function payTo (address to, uint amount) internal returns (bool){
+ (bool successful,) = payable(to).call{value: amount}("");
+ require(seccessful, "Payment Failed");
+ return true;
 }
 
  }
